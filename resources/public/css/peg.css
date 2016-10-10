@@ -1,0 +1,23 @@
+html, body {
+  font-family: 'PT Sans', Arial, sans-serif;
+  font-size: 16pt;
+}
+
+main {
+  max-width: 960px;
+  text-align: center;
+  margin: 1rem auto;
+}
+
+input {
+  font-size: 16pt;
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 0.2rem 0.5rem;
+}
+
+aside {
+  margin-bottom: 1rem;
+  font-size: 12pt;
+  color: gray;
+}
