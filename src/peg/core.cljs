@@ -1,5 +1,4 @@
 (ns peg.core
-  (:refer-clojure :exclude [START])
   (:require-macros [peg.macros :refer [spy]])
   (:require [clojure.string :as string]
             [vdom.core :refer [renderer]]))
@@ -7,9 +6,11 @@
 (enable-console-print!)
 
 (defn triple [pattern noun verb adjective]
-  [[pattern :noun noun]
+  [[pattern :subject-noun noun]
+   [pattern :object-noun noun]
    [pattern :verb verb]
-   [pattern :adjective adjective]])
+   [pattern :subject-adjective adjective]
+   [pattern :object-adjective adjective]])
 
 (def pegwords
   (concat
@@ -124,23 +125,31 @@
    (triple "98" "Biff" "pave" "puffy")
    (triple "99" "pipe" "pop" "baby")))
 
-(def START ::START)
-(def END ::END)
+(def SENTENCE ::SENTENCE)
+(def COMMA ::COMMA)
+(def PERIOD ::PERIOD)
 
 (def grammar
-  {START #{:noun :adjective}
-   :noun #{:verb END}
-   :verb #{:adjective :noun END}
-   :adjective #{:noun}})
+  {SENTENCE           #{:subject-noun :subject-adjective}
+   :subject-noun      #{[COMMA :subject-noun] :verb PERIOD}
+   :subject-adjective #{[COMMA :subject-adjective] :subject-noun}
+   :verb              #{:object-adjective :object-noun [COMMA :verb] PERIOD}
+   :object-noun       #{[COMMA :object-noun] PERIOD}
+   :object-adjective  #{:object-adjective :object-noun}})
 
-(defn sentences [statement grammar vocab]
+(defn sentence [statement grammar vocab]
   (if (string/blank? statement)
-    (when ((grammar START) END)
-        [nil])
-    (for [point (grammar START)
+    (when (get (grammar SENTENCE) PERIOD)
+        ["."])
+    (for [point (grammar SENTENCE)
+          :let [[point comma?] (if (and (vector? point)
+                                        (= COMMA (first point)))
+                                 [(second point) true]
+                                 [point false])]
           [head new-point remaining] (vocab statement point)
-          tail (sentences remaining (assoc grammar START (grammar point)) vocab)]
-      (cons head tail))))
+          :let [head (if comma? (str head ",") head)]
+          tail (sentence remaining (assoc grammar SENTENCE (grammar point)) vocab)]
+      (cons (str head " ") tail))))
 
 (defn vocab [entries statement point]
   (into []
@@ -173,10 +182,10 @@
   (swap! model assoc :mnemonics
          (as-> pegwords x
               (partial vocab x)
-              (sentences statement grammar x)
+              (sentence statement grammar x)
               (sort-by count x)
               (take-while #(= (count %) (count (first x))) x)
-              (map #(string/join " " %) x))))
+              (map string/join x))))
 
 (defonce render!
   (let [r (renderer (.getElementById js/document "app"))]
