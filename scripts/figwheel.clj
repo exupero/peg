@@ -10,7 +10,7 @@
    :build-ids ["dev"]
    :all-builds
    [{:id "dev"
-     :figwheel {:on-jsload "peg.core/figwheel-reload"}
+     :figwheel {:on-jsload "peg.core/mount-root"}
      :source-paths ["src"]
      :compiler {:main 'peg.core
                 :optimizations :none

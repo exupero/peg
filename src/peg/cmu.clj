@@ -44,10 +44,11 @@
           (filter #(re-matches #"^[A-Za-z].*" %))
           (map #(string/split % #"  "))
           (map (fn [[word phonemes]]
-                 [(sequence
+                 [(transduce
                     (comp
                       (map #(string/replace % #"[0-9]" ""))
                       (mapcat numbers))
+                    str
                     (string/split phonemes #" "))
                   (words word)]))
           (filter second))))))
@@ -74,6 +75,6 @@
 
 (comment
 
-  (serialize-to-file "resources/dictionary.json" dictionary)
+  (serialize-to-file "resources/public/dictionary.json" dictionary)
 
   )
