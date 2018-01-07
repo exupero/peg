@@ -1,6 +1,7 @@
 (ns peg.core
   (:require-macros [peg.macros :refer [spy]])
   (:require [clojure.string :as string]
+            goog.object
             [reagent.core :as r]
             [re-frame.core :as rf]
             [ajax.core :as http]))
@@ -27,13 +28,12 @@
   :peg/init
   (fn [_ _]
     {:db {:peg/mnemonics []}
-     :ajax {:http/url js/window.dictionaryUrl
+     :ajax {:http/url (goog.object/get js/window "dictionaryUrl")
             :http/on-success #(rf/dispatch [:peg/dictionary %])}}))
 
 (rf/reg-event-db
   :peg/dictionary
   (fn [db [_ dictionary]]
-    (println dictionary)
     (assoc db :peg/dictionary dictionary)))
 
 (rf/reg-event-db
@@ -61,7 +61,6 @@
 (rf/reg-sub
   :peg/mnemonics
   (fn [db]
-    (spy (count (db :peg/mnemonics)))
     (->> (db :peg/mnemonics)
       (sort-by count)
       (take 12))))
